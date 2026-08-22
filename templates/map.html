@@ -1,0 +1,179 @@
+<title>__WENTRO_TITLE__</title>
+<style>
+  :root {
+    --bg: #f6f4f1; --panel: #ffffff; --text: #22303c; --muted: #6b7280;
+    --line: #e5e7eb; --chip: #f1f3f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14181d; --panel: #1c2229; --text: #e6e9ed; --muted: #98a2ae;
+      --line: #2c333b; --chip: #262d35;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14181d; --panel: #1c2229; --text: #e6e9ed; --muted: #98a2ae;
+    --line: #2c333b; --chip: #262d35;
+  }
+  body { background: var(--bg); color: var(--text);
+         font: 15px/1.5 -apple-system, "Segoe UI", "PingFang SC", sans-serif; margin: 0; }
+  #app { display: flex; height: 100vh; }
+  #panel { width: 300px; flex: none; background: var(--panel); overflow-y: auto;
+           border-right: 1px solid var(--line); padding: 16px; box-sizing: border-box; }
+  #panel h1 { font-size: 18px; margin: 0 0 2px; }
+  #panel .region { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+  .pt { display: flex; align-items: baseline; gap: 8px; padding: 6px 8px;
+        border-radius: 8px; cursor: pointer; }
+  .pt:hover, .pt.active { background: var(--chip); }
+  .pt .num { flex: none; width: 22px; height: 22px; border-radius: 50%;
+             background: #364fc7; color: #fff; font-size: 12px; font-weight: 700;
+             display: flex; align-items: center; justify-content: center;
+             align-self: center; }
+  .pt .res { color: var(--muted); font-size: 12px; display: block; }
+  .leg { color: var(--muted); font-size: 13px; padding: 2px 8px 2px 38px; }
+  #totals { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line);
+            font-size: 13px; color: var(--muted); }
+  #mapwrap { flex: 1; position: relative; overflow: hidden; background: #dfe8ef; }
+  #viewport { position: absolute; transform-origin: 0 0; }
+  #viewport img { display: block; user-select: none; -webkit-user-drag: none; }
+  #viewport svg { position: absolute; left: 0; top: 0; }
+  #attr { position: absolute; right: 4px; bottom: 4px; background: rgba(255,255,255,.85);
+          color: #333; font-size: 11px; padding: 1px 6px; border-radius: 4px; }
+  #zoomctl { position: absolute; left: 10px; top: 10px; display: flex;
+             flex-direction: column; gap: 6px; }
+  #zoomctl button { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--line);
+                    background: var(--panel); color: var(--text); font-size: 18px; cursor: pointer; }
+  @media (max-width: 700px) {
+    #app { flex-direction: column; }
+    #panel { width: auto; max-height: 40vh; border-right: 0; border-bottom: 1px solid var(--line); }
+  }
+</style>
+<div id="app">
+  <aside id="panel">
+    <h1 id="t"></h1>
+    <div class="region" id="r"></div>
+    <div id="list"></div>
+    <div id="totals"></div>
+  </aside>
+  <main id="mapwrap">
+    <div id="viewport"><img id="basemap" alt=""><svg id="overlay" xmlns="http://www.w3.org/2000/svg"></svg></div>
+    <div id="zoomctl"><button id="zin">+</button><button id="zout">−</button></div>
+    <div id="attr">© OpenStreetMap contributors</div>
+  </main>
+</div>
+<script>
+const DATA = /*__WENTRO_DATA__*/null;
+const NS = "http://www.w3.org/2000/svg";
+const fmtKm = m => m == null ? "" : (m / 1000).toFixed(m < 950 ? 2 : 1) + " km";
+const fmtMin = s => s == null ? "" : "~" + Math.max(1, Math.round(s / 60)) + " min";
+const MODE_ICON = { foot: "🚶", bike: "🚲", car: "🚗", transit: "🚇" };
+
+document.getElementById("t").textContent = DATA.title;
+document.getElementById("r").textContent = DATA.region;
+document.title = DATA.title;
+
+const img = document.getElementById("basemap");
+img.src = DATA.image; img.width = DATA.width; img.height = DATA.height;
+const svg = document.getElementById("overlay");
+svg.setAttribute("width", DATA.width); svg.setAttribute("height", DATA.height);
+svg.setAttribute("viewBox", `0 0 ${DATA.width} ${DATA.height}`);
+
+for (const leg of DATA.legs) {
+  const pl = document.createElementNS(NS, "polyline");
+  pl.setAttribute("points", leg.path.map(p => p.join(",")).join(" "));
+  pl.setAttribute("fill", "none");
+  pl.setAttribute("stroke", leg.color);
+  pl.setAttribute("stroke-width", "5");
+  pl.setAttribute("stroke-linecap", "round");
+  pl.setAttribute("stroke-linejoin", "round");
+  pl.setAttribute("opacity", "0.85");
+  if (leg.dashed) pl.setAttribute("stroke-dasharray", "10 8");
+  svg.appendChild(pl);
+}
+for (const p of DATA.points) {
+  const g = document.createElementNS(NS, "g");
+  g.setAttribute("id", "mk-" + p.n);
+  const c = document.createElementNS(NS, "circle");
+  c.setAttribute("cx", p.x); c.setAttribute("cy", p.y); c.setAttribute("r", "11");
+  c.setAttribute("fill", "#364fc7"); c.setAttribute("stroke", "#fff");
+  c.setAttribute("stroke-width", "2.5");
+  const t = document.createElementNS(NS, "text");
+  t.setAttribute("x", p.x); t.setAttribute("y", p.y);
+  t.setAttribute("fill", "#fff"); t.setAttribute("font-size", "11");
+  t.setAttribute("font-weight", "700"); t.setAttribute("text-anchor", "middle");
+  t.setAttribute("dominant-baseline", "central");
+  t.textContent = p.n;
+  g.appendChild(c); g.appendChild(t); svg.appendChild(g);
+}
+
+// Side panel: point rows interleaved with leg rows.
+const list = document.getElementById("list");
+DATA.points.forEach((p, i) => {
+  const row = document.createElement("div");
+  row.className = "pt"; row.id = "row-" + p.n;
+  row.innerHTML = `<span class="num">${p.n}</span><span><span class="nm"></span>` +
+                  `<span class="res"></span></span>`;
+  row.querySelector(".nm").textContent = p.name;
+  row.querySelector(".res").textContent = p.resolved || "";
+  row.addEventListener("click", () => highlight(p));
+  list.appendChild(row);
+  const leg = DATA.legs[i];
+  if (leg) {
+    const lr = document.createElement("div");
+    lr.className = "leg";
+    const bits = [MODE_ICON[leg.mode] || "", fmtKm(leg.distance_m),
+                  fmtMin(leg.duration_s), leg.note || ""].filter(Boolean);
+    lr.textContent = "↓ " + bits.join(" · ");
+    list.appendChild(lr);
+  }
+});
+const tot = DATA.totals;
+document.getElementById("totals").textContent =
+  `Total: ${fmtKm(tot.distance_m)} · ${fmtMin(tot.duration_s)}`;
+
+// Pan & zoom.
+const wrap = document.getElementById("mapwrap");
+const vp = document.getElementById("viewport");
+let k = 1, minK = 1, tx = 0, ty = 0;
+function apply() { vp.style.transform = `translate(${tx}px,${ty}px) scale(${k})`; }
+function fit() {
+  minK = Math.min(wrap.clientWidth / DATA.width, wrap.clientHeight / DATA.height);
+  k = minK;
+  tx = (wrap.clientWidth - DATA.width * k) / 2;
+  ty = (wrap.clientHeight - DATA.height * k) / 2;
+  apply();
+}
+function zoomAt(f, cx, cy) {
+  const nk = Math.min(2.5, Math.max(minK, k * f));
+  tx = cx - (cx - tx) * (nk / k); ty = cy - (cy - ty) * (nk / k);
+  k = nk; apply();
+}
+let drag = null;
+wrap.addEventListener("pointerdown", e => {
+  drag = { x: e.clientX - tx, y: e.clientY - ty }; wrap.setPointerCapture(e.pointerId);
+});
+wrap.addEventListener("pointermove", e => {
+  if (drag) { tx = e.clientX - drag.x; ty = e.clientY - drag.y; apply(); }
+});
+wrap.addEventListener("pointerup", () => { drag = null; });
+wrap.addEventListener("wheel", e => {
+  e.preventDefault();
+  const r = wrap.getBoundingClientRect();
+  zoomAt(e.deltaY < 0 ? 1.15 : 1 / 1.15, e.clientX - r.left, e.clientY - r.top);
+}, { passive: false });
+document.getElementById("zin").addEventListener("click",
+  () => zoomAt(1.3, wrap.clientWidth / 2, wrap.clientHeight / 2));
+document.getElementById("zout").addEventListener("click",
+  () => zoomAt(1 / 1.3, wrap.clientWidth / 2, wrap.clientHeight / 2));
+window.addEventListener("resize", fit);
+fit();
+
+function highlight(p) {
+  document.querySelectorAll(".pt.active").forEach(el => el.classList.remove("active"));
+  document.getElementById("row-" + p.n).classList.add("active");
+  document.querySelectorAll("#overlay circle").forEach(c => c.setAttribute("r", "11"));
+  const mk = document.querySelector("#mk-" + CSS.escape(String(p.n)) + " circle");
+  mk.setAttribute("r", "15");
+  // Center the marker in the viewport at current zoom.
+  tx = wrap.clientWidth / 2 - p.x * k; ty = wrap.clientHeight / 2 - p.y * k; apply();
+}
+</script>
