@@ -35,7 +35,8 @@
             font-size: 13px; color: var(--muted); }
   #mapwrap { flex: 1; position: relative; overflow: hidden; background: #dfe8ef; }
   #viewport { position: absolute; transform-origin: 0 0; }
-  #viewport img { display: block; user-select: none; -webkit-user-drag: none; }
+  #viewport img { display: block; user-select: none; -webkit-user-drag: none;
+                  max-width: none; }
   #viewport svg { position: absolute; left: 0; top: 0; }
   #attr { position: absolute; right: 4px; bottom: 4px; background: rgba(255,255,255,.85);
           color: #333; font-size: 11px; padding: 1px 6px; border-radius: 4px; }
@@ -77,6 +78,13 @@ img.src = DATA.image; img.width = DATA.width; img.height = DATA.height;
 const svg = document.getElementById("overlay");
 svg.setAttribute("width", DATA.width); svg.setAttribute("height", DATA.height);
 svg.setAttribute("viewBox", `0 0 ${DATA.width} ${DATA.height}`);
+// The artifact wrapper's CSS reset (img { max-width: 100% }) must never
+// shrink the basemap independently of the overlay: pin both to exact px.
+for (const el of [img, svg]) {
+  el.style.width = DATA.width + "px";
+  el.style.height = DATA.height + "px";
+  el.style.maxWidth = "none";
+}
 
 for (const leg of DATA.legs) {
   const pl = document.createElementNS(NS, "polyline");

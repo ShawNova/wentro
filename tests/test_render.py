@@ -176,3 +176,11 @@ def test_banner_moves_away_from_top_left_marker():
     # With no points in any corner region, top-left is preferred.
     empty = {"points": [{"n": 1, "x": 500.0, "y": 400.0}]}
     assert _pick_banner_anchor(empty, 1.0, 300, 60, 1000, 800, 10, 12) == (10, 10)
+
+
+def test_template_immune_to_wrapper_img_reset():
+    # The artifact wrapper injects `img { max-width: 100% }`; the basemap
+    # must opt out or it shrinks independently of the SVG overlay.
+    template = open("templates/map.html").read()
+    assert "max-width: none" in template
+    assert 'el.style.maxWidth = "none"' in template
