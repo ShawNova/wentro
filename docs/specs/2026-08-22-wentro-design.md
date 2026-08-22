@@ -25,6 +25,9 @@ Tagline: *Wentro — retrace the journey you went. 温途——重温你走过�
   across updates.
 - **Cross-session durability.** Each itinerary is a JSON file on disk —
   the source of truth. Any later session can reload and edit it.
+  Resolution order: `./itineraries/` in the current working directory if
+  it exists (working inside the repo), else `~/.wentro/itineraries/`
+  (global default, created on first use).
 
 ## Non-goals (current release)
 
@@ -48,7 +51,9 @@ Pipeline (orchestrated by Claude per SKILL.md):
 1. **Parse** user input → draft itinerary JSON.
 2. **Geocode** each point via Nominatim, biased by the itinerary region;
    ambiguous hits are surfaced to the user as a candidate list.
-3. **Route** each leg via OSRM (profiles: `foot`, `bike`, `driving`),
+3. **Route** each leg via the public OSRM instances run by FOSSGIS at
+   `routing.openstreetmap.de` (profiles: `routed-foot`, `routed-bike`,
+   `routed-car` — the official OSRM demo server only serves driving),
    honoring user-supplied `via` correction points. Transit legs skip OSRM.
 4. **Tiles**: compute the route bounding box + padding, choose a zoom
    level that fits ~1200 px wide (tile count capped), download OSM tiles,
@@ -75,6 +80,7 @@ wentro/
 │       ├── tiles.py              # OSM tile fetch + stitch → data URI
 │       └── render.py             # JSON + template → final HTML
 ├── templates/map.html            # render template
+├── requirements.txt              # requests, Pillow
 ├── examples/rome-walk.json       # committed sample itinerary
 ├── itineraries/                  # user data, gitignored
 └── docs/                         # data-format.md etc., EN + zh-CN
@@ -124,6 +130,10 @@ Installation: clone, then copy or symlink `skill/` to
 - `photos`: reserved, not rendered in this release.
 - Point `name` keeps the user's language; `query`/`resolved` hold the
   geocoding request and canonical result.
+- **Chain invariant:** `legs` must form a single chain visiting `points`
+  in array order (`legs[i].from == points[i].id`,
+  `legs[i].to == points[i+1].id`). Scripts validate this on every read
+  and write and refuse to render an inconsistent file.
 
 ## Workflows
 
@@ -158,7 +168,7 @@ re-route, republish.
 | Service | Use | Etiquette |
 |---|---|---|
 | Nominatim | geocoding | descriptive User-Agent, ≤1 req/s |
-| OSRM demo server | foot/bike/driving routes | descriptive UA, low volume |
+| FOSSGIS OSRM (`routing.openstreetmap.de`) | foot/bike/car routes | descriptive UA, low volume |
 | OSM tile server | basemap tiles | descriptive UA, ≤2 concurrent, ≤80 tiles per build |
 
 ## Error handling
@@ -168,6 +178,13 @@ re-route, republish.
 - OSRM unreachable/no route → tell the user; fall back to a straight
   dashed line marked as approximate.
 - Tile download failure → retry, then drop one zoom level.
+
+## Dependencies
+
+- Python ≥ 3.10; third-party packages limited to `requests` (HTTP) and
+  `Pillow` (tile stitching), pinned in `requirements.txt`.
+- README installation covers: clone → `pip install -r requirements.txt`
+  → link `skill/` into `~/.claude/skills/wentro/`.
 
 ## Conventions
 
