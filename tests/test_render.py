@@ -173,3 +173,11 @@ def test_template_immune_to_wrapper_img_reset():
     template = open("templates/map.html").read()
     assert "max-width: none" in template
     assert 'el.style.maxWidth = "none"' in template
+
+
+def test_render_png_draws_no_title():
+    # Contract: the PNG share image carries no title text — map, route,
+    # markers, and OSM attribution only (leg notes are content, not title).
+    import inspect
+
+    assert '"title"' not in inspect.getsource(render.render_png)
