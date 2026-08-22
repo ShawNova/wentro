@@ -34,7 +34,13 @@ published artifact never talks to the network; it doesn't need to.
 
 ## Install
 
-The skill folder is self-contained — installing it is just copying it into place:
+One command (works for Claude Code and other agents that support skills):
+
+```bash
+npx skills add https://github.com/ShawNova/wentro --yes
+```
+
+No Node? The skill folder is self-contained — copying it into place is enough:
 
 ```bash
 git clone --depth 1 https://github.com/ShawNova/wentro.git /tmp/wentro
@@ -100,7 +106,8 @@ republishes.
 ## Uninstall
 
 ```bash
-rm -rf ~/.claude/skills/wentro ~/.wentro/venv
+npx skills remove wentro   # if installed via npx skills
+rm -rf ~/.claude/skills/wentro ~/.agents/skills/wentro ~/.wentro/venv
 ```
 
 Removes the skill and its bootstrapped Python environment. Your trip data in

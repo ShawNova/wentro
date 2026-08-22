@@ -129,8 +129,11 @@ and there are exactly `len(points) - 1` legs (enforced by
 
 When the user asks to uninstall/remove wentro, confirm once, then:
 
-1. `rm -rf ~/.claude/skills/wentro` — no trailing slash: in the dev setup
-   this is a symlink and must be removed as a link, never through it.
+1. Remove the installed skill, covering all install shapes — no trailing
+   slashes (these may be symlinks; remove the link, never through it):
+   `rm -rf ~/.claude/skills/wentro ~/.agents/skills/wentro`
+   (an `npx skills` install lives in `~/.agents/skills` with a symlink in
+   `~/.claude/skills`; a manual copy or dev symlink only has the first).
 2. `rm -rf ~/.wentro/venv` — the bootstrapped Python environment always
    goes with the skill.
 3. `~/.wentro/itineraries/` is the user's trip data — KEEP it unless they

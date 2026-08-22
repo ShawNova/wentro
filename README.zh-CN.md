@@ -28,7 +28,13 @@ Wentro — retrace the journey you went. 温途——重温你走过的路。
 
 ## 安装
 
-skill 文件夹是自包含的——安装就是把它拷到位：
+一条命令（Claude Code 及其他支持 skill 的 agent 通用）：
+
+```bash
+npx skills add https://github.com/ShawNova/wentro --yes
+```
+
+没有 Node 环境？skill 文件夹是自包含的，直接拷到位也行：
 
 ```bash
 git clone --depth 1 https://github.com/ShawNova/wentro.git /tmp/wentro
@@ -87,7 +93,8 @@ Claude 会删掉这个点，把它两边的路段合并成一段，重新路由�
 ## 卸载
 
 ```bash
-rm -rf ~/.claude/skills/wentro ~/.wentro/venv
+npx skills remove wentro   # 若通过 npx skills 安装
+rm -rf ~/.claude/skills/wentro ~/.agents/skills/wentro ~/.wentro/venv
 ```
 
 移除 skill 及其自动创建的 Python 环境。`~/.wentro/itineraries/` 里的行程数据
