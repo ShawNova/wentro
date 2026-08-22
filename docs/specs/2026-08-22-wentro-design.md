@@ -85,6 +85,14 @@ local language or English. Before geocoding, Claude:
    language or English, city/region context appended. The user's original
    wording is preserved as the display `name`.
 
+**Mode parsing.** Users state transport modes in natural language at
+three scopes, all of which Claude must recognize: trip-level ("everything
+on foot this time"), exceptions ("taxi to the airport, walking otherwise"),
+and per-leg. Precedence: per-leg > exception > trip-level default. The
+resolved mode is written explicitly on every leg — the JSON carries no
+implicit default. If no mode is stated at any scope, Claude assumes
+`foot` and flags that assumption in its reply for correction.
+
 **Deterministic checks (scripts' job).** `geocode.py` passes a
 region-derived `viewbox` with `bounded=1` so search prefers in-region
 hits, and returns top-N candidates with coordinates and address.
