@@ -2,3 +2,4 @@ itineraries/*
 !itineraries/.gitkeep
 .DS_Store
 __pycache__/
+.venv/
