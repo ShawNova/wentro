@@ -122,13 +122,14 @@ wentro/
 ├── LICENSE                       # MIT
 ├── skill/
 │   ├── SKILL.md                  # the C/U/D workflow (English)
+│   ├── requirements.txt          # requests, Pillow (skill is self-contained)
+│   ├── templates/map.html        # render template
 │   └── scripts/
 │       ├── geocode.py            # Nominatim search w/ region bias
 │       ├── route.py              # OSRM routing w/ via-points
 │       ├── tiles.py              # OSM tile fetch + stitch → data URI
 │       └── render.py             # JSON + template → HTML + PNG export
-├── templates/map.html            # render template
-├── requirements.txt              # requests, Pillow
+├── requirements.txt              # -> skill/requirements.txt
 ├── examples/rome-walk.json       # committed sample itinerary
 ├── itineraries/                  # user data, gitignored
 └── docs/                         # data-format.md etc., EN + zh-CN

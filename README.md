@@ -34,14 +34,25 @@ published artifact never talks to the network; it doesn't need to.
 
 ## Install
 
+The skill folder is self-contained — installing it is just copying it into place:
+
 ```bash
-git clone https://github.com/ShawNova/wentro.git
-cd wentro && pip install -r requirements.txt
-mkdir -p ~/.claude/skills && ln -sfn "$(pwd)/skill" ~/.claude/skills/wentro
+git clone --depth 1 https://github.com/ShawNova/wentro.git /tmp/wentro
+mkdir -p ~/.claude/skills && cp -r /tmp/wentro/skill ~/.claude/skills/wentro && rm -rf /tmp/wentro
 ```
 
-Requires Python ≥ 3.10. The only third-party dependencies are `requests` and `Pillow`,
-declared in `requirements.txt`.
+Nothing else to set up: on first use the skill checks for Python ≥ 3.10 and
+installs its two dependencies (`requests`, `Pillow`) into `~/.wentro/venv`
+automatically.
+
+For development, clone the repo and symlink instead, so the installed skill
+tracks your working tree:
+
+```bash
+git clone https://github.com/ShawNova/wentro.git
+cd wentro && pip install -r requirements-dev.txt
+mkdir -p ~/.claude/skills && ln -sfn "$(pwd)/skill" ~/.claude/skills/wentro
+```
 
 ## Usage
 

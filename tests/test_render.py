@@ -59,7 +59,7 @@ def test_render_html_injects_payload(tmp_path):
     data, meta, basemap = fixture(tmp_path)
     p = render.build_payload(data, meta, basemap)
     out = tmp_path / "page.html"
-    render.render_html(p, "templates/map.html", out)
+    render.render_html(p, "skill/templates/map.html", out)
     html = out.read_text()
     assert "/*__WENTRO_DATA__*/null" not in html
     assert "__WENTRO_TITLE__" not in html
@@ -100,7 +100,7 @@ def test_render_html_escapes_injection_attacks(tmp_path):
     p["legs"][0]["note"] = "broken</script><img src=x onerror=alert('xss')>"
     p["points"][0]["name"] = "<!--<script>"
     out = tmp_path / "page.html"
-    render.render_html(p, "templates/map.html", out)
+    render.render_html(p, "skill/templates/map.html", out)
     html = out.read_text()
     data_line = next(line for line in html.splitlines() if "const DATA" in line)
     # The entire injected payload lands on this one line (compact JSON);
@@ -151,7 +151,7 @@ def test_transit_leg_note_renders_in_svg_and_png(tmp_path):
     p = render.build_payload(data, meta, basemap)
 
     out_html = tmp_path / "page.html"
-    render.render_html(p, "templates/map.html", out_html)
+    render.render_html(p, "skill/templates/map.html", out_html)
     html = out_html.read_text()
     # The overlay SVG is built client-side by the embedded script (not
     # present as static markup in the saved file), so we check for the
@@ -170,7 +170,7 @@ def test_transit_leg_note_renders_in_svg_and_png(tmp_path):
 def test_template_immune_to_wrapper_img_reset():
     # The artifact wrapper injects `img { max-width: 100% }`; the basemap
     # must opt out or it shrinks independently of the SVG overlay.
-    template = open("templates/map.html").read()
+    template = open("skill/templates/map.html").read()
     assert "max-width: none" in template
     assert 'el.style.maxWidth = "none"' in template
 

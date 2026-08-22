@@ -56,10 +56,20 @@ and there are exactly `len(points) - 1` legs (enforced by
    ("all on foot"). Write the resolved mode on EVERY leg. If no mode was
    stated at any scope, use `foot` and flag the assumption in your reply.
 
-## Pipeline (run from the repo root, or substitute the skill directory)
+## Pipeline
+
+`<skill_dir>` below is this skill's directory (where this SKILL.md lives).
+
+0. Environment (first run) — resolve the interpreter, call it `$PY` below:
+   - `./.venv/bin/python` if it exists (repo development setup);
+   - else `~/.wentro/venv/bin/python` if it exists;
+   - else bootstrap it: pick the newest `python3.x` (≥ 3.10) on PATH, then
+     `<python> -m venv ~/.wentro/venv && ~/.wentro/venv/bin/pip install -r <skill_dir>/requirements.txt`.
+   Never assume the bare `python3` is adequate (macOS ships 3.9 with a TLS
+   stack too old for the routing service).
 
 1. Geocode each point (~1 s per call — Nominatim rate limit):
-   `python3 skill/scripts/geocode.py --query "Colosseum, Rome" --region "Rome, Italy"`
+   `$PY <skill_dir>/scripts/geocode.py --query "Colosseum, Rome" --region "Rome, Italy"`
    → `{bounded, candidates:[{display_name, lat, lon, ...}]}`.
    Pick the best candidate; if ambiguous or `bounded: false`, show the top
    candidates and ask. Store lat/lon/resolved on the point.
@@ -68,12 +78,12 @@ and there are exactly `len(points) - 1` legs (enforced by
      instead of accepting it silently.
 2. Write the JSON; `common.save_itinerary` validates the chain invariant.
 3. Coherence gate:
-   `python3 skill/scripts/validate.py --itinerary itineraries/<slug>.json`
+   `$PY <skill_dir>/scripts/validate.py --itinerary itineraries/<slug>.json`
    Exit 1 = outlier hard error → re-geocode the flagged point; if it still
    fails, STOP and ask the user. Warnings → confirm with the user before
    proceeding. Never render a map with a known-suspect point.
 4. Route each non-transit leg (lat,lon order; vias between endpoints):
-   `python3 skill/scripts/route.py --mode foot --coords "41.8902,12.4922;41.8925,12.4853"`
+   `$PY <skill_dir>/scripts/route.py --mode foot --coords "41.8902,12.4922;41.8925,12.4853"`
    → store geometry/distance_m/duration_s on the leg. On any routing failure
    (OSRM RuntimeError or a network/HTTP error): keep geometry null (renders
    as dashed approximate) and tell the user.
@@ -81,14 +91,14 @@ and there are exactly `len(points) - 1` legs (enforced by
 5. Basemap — compute the bbox AFTER routing, so it covers routed geometry
    and not just the point coordinates (OSRM's path can bow outside the
    straight line between two points):
-   `python3 skill/scripts/render.py --itinerary itineraries/<slug>.json --print-bbox`
+   `$PY <skill_dir>/scripts/render.py --itinerary itineraries/<slug>.json --print-bbox`
    → `minlon,minlat,maxlon,maxlat`. Feed that straight into tiles.py, which
    pads it further (use the `--bbox=` form: a bbox west of Greenwich starts with `-` and the space form trips argparse):
-   `python3 skill/scripts/tiles.py --bbox="<bbox from above>" --out /tmp/wentro-<slug>-map.png --meta-out /tmp/wentro-<slug>-meta.json`
+   `$PY <skill_dir>/scripts/tiles.py --bbox="<bbox from above>" --out /tmp/wentro-<slug>-map.png --meta-out /tmp/wentro-<slug>-meta.json`
 6. Render:
-   `python3 skill/scripts/render.py --itinerary itineraries/<slug>.json --basemap /tmp/wentro-<slug>-map.png --meta /tmp/wentro-<slug>-meta.json --out-html /tmp/wentro-<slug>.html --out-png itineraries/<slug>.png`
-   (`--template` defaults to the `templates/map.html` shipped alongside this
-   skill; pass it explicitly only to override.)
+   `$PY <skill_dir>/scripts/render.py --itinerary itineraries/<slug>.json --basemap /tmp/wentro-<slug>-map.png --meta /tmp/wentro-<slug>-meta.json --out-html /tmp/wentro-<slug>.html --out-png itineraries/<slug>.png`
+   (`--template` defaults to `<skill_dir>/templates/map.html`, shipped inside
+   this skill; pass it explicitly only to override.)
 7. Publish `/tmp/wentro-<slug>.html` as an artifact. Slug-scoped paths
    keep concurrent builds and test runs from clobbering each other —
    never reuse a shared scratch file without checking it is the build

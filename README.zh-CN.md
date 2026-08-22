@@ -28,13 +28,23 @@ Wentro — retrace the journey you went. 温途——重温你走过的路。
 
 ## 安装
 
+skill 文件夹是自包含的——安装就是把它拷到位：
+
 ```bash
-git clone https://github.com/ShawNova/wentro.git
-cd wentro && pip install -r requirements.txt
-mkdir -p ~/.claude/skills && ln -sfn "$(pwd)/skill" ~/.claude/skills/wentro
+git clone --depth 1 https://github.com/ShawNova/wentro.git /tmp/wentro
+mkdir -p ~/.claude/skills && cp -r /tmp/wentro/skill ~/.claude/skills/wentro && rm -rf /tmp/wentro
 ```
 
-需要 Python ≥ 3.10。第三方依赖只有 `requests` 和 `Pillow`，在 `requirements.txt` 里声明最低版本。
+无需其他配置：首次使用时 skill 会自动检测 Python ≥ 3.10，并把两个依赖
+（`requests`、`Pillow`）装进 `~/.wentro/venv`。
+
+如果要参与开发，改用 clone + 软链，让已安装的 skill 跟随你的工作树：
+
+```bash
+git clone https://github.com/ShawNova/wentro.git
+cd wentro && pip install -r requirements-dev.txt
+mkdir -p ~/.claude/skills && ln -sfn "$(pwd)/skill" ~/.claude/skills/wentro
+```
 
 ## 使用方法
 

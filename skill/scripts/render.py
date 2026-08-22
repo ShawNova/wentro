@@ -18,7 +18,7 @@ MARKER = "#364fc7"
 # skill/scripts/render.py -> parents[2] is the repo root (also correct when
 # reached through the ~/.claude/skills/wentro symlink, since resolve()
 # follows it to the real repo path).
-DEFAULT_TEMPLATE = Path(__file__).resolve().parents[2] / "templates" / "map.html"
+DEFAULT_TEMPLATE = Path(__file__).resolve().parents[1] / "templates" / "map.html"
 
 
 def _project(lon, lat, meta):

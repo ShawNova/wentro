@@ -37,7 +37,7 @@ def test_example_validates_and_renders(tmp_path, monkeypatch):
 
     out_html = tmp_path / "page.html"
     out_png = tmp_path / "share.png"
-    render.render_html(payload, "templates/map.html", out_html)
+    render.render_html(payload, "skill/templates/map.html", out_html)
     render.render_png(payload, basemap, out_png)
     assert "Classic Rome Walk" in out_html.read_text()
     assert Image.open(out_png).width > 0
