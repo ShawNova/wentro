@@ -74,3 +74,36 @@ def test_render_png_upscales_to_long_side(tmp_path):
     render.render_png(p, basemap, out, long_side=1600)
     img = Image.open(out)
     assert max(img.size) == 1600
+
+
+def test_render_png_downscales_oversized_basemap(tmp_path):
+    data, meta, basemap = fixture(tmp_path)
+    # Create a 3000×2000 basemap (oversized)
+    oversized = tmp_path / "oversized.png"
+    Image.new("RGB", (3000, 2000), (230, 228, 224)).save(oversized)
+    p = render.build_payload(data, meta, oversized)
+    out = tmp_path / "share.png"
+    render.render_png(p, oversized, out, long_side=2000)
+    img = Image.open(out)
+    # Long side should be exactly 2000
+    assert max(img.size) == 2000
+    # Should be downscaled, so both dimensions smaller than original
+    assert img.width < 3000
+    assert img.height < 2000
+
+
+def test_render_html_escapes_injection_attacks(tmp_path):
+    data, meta, basemap = fixture(tmp_path)
+    # Craft a payload with injection attempts
+    p = render.build_payload(data, meta, basemap)
+    p["title"] = "x</title><script>alert('xss')</script><title>y"
+    p["legs"][0]["note"] = "broken</script><img src=x onerror=alert('xss')>"
+    out = tmp_path / "page.html"
+    render.render_html(p, "templates/map.html", out)
+    html = out.read_text()
+    # Ensure no raw </script> in the HTML (should be escaped to <\/script>)
+    assert "</script>" not in html or "<\\/script>" in html
+    # Ensure the title doesn't break the <title> tag
+    assert "</title>" not in html.split("<title>")[1].split("</title>")[0]
+    # JSON should contain escaped slashes
+    assert "<\\/script" in html  # escaped JSON in the script

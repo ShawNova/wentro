@@ -1,6 +1,7 @@
 """Render an itinerary to interactive HTML and a static PNG share image."""
 import argparse
 import base64
+import html
 import json
 import math
 from pathlib import Path
@@ -63,11 +64,11 @@ def build_payload(data, meta, basemap_path):
 
 
 def render_html(payload, template_path, out_path):
-    html = Path(template_path).read_text(encoding="utf-8")
-    html = html.replace("__WENTRO_TITLE__", payload["title"])
-    html = html.replace("/*__WENTRO_DATA__*/null",
-                        json.dumps(payload, ensure_ascii=False))
-    Path(out_path).write_text(html, encoding="utf-8")
+    template = Path(template_path).read_text(encoding="utf-8")
+    template = template.replace("__WENTRO_TITLE__", html.escape(payload["title"]))
+    payload_json = json.dumps(payload, ensure_ascii=False).replace("</", "<\\/")
+    template = template.replace("/*__WENTRO_DATA__*/null", payload_json)
+    Path(out_path).write_text(template, encoding="utf-8")
 
 
 def _dashed_line(draw, pts, color, width, dash=16, gap=10):
@@ -93,8 +94,7 @@ def _font(size):
 
 def render_png(payload, basemap_path, out_path, long_side=2000):
     img = Image.open(basemap_path).convert("RGB")
-    s = long_side / max(img.size)
-    s = min(2.0, s) if s > 1 else 1.0
+    s = min(2.0, long_side / max(img.size))
     if s != 1.0:
         img = img.resize((round(img.width * s), round(img.height * s)),
                          Image.LANCZOS)
