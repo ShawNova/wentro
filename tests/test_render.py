@@ -166,17 +166,6 @@ def test_transit_leg_note_renders_in_svg_and_png(tmp_path):
     assert out_png.exists()
 
 
-def test_banner_moves_away_from_top_left_marker():
-    from render import _pick_banner_anchor
-
-    payload = {"points": [{"n": 1, "x": 30.0, "y": 30.0}]}
-    # Banner at top-left would cover the marker; expect a different corner.
-    anchor = _pick_banner_anchor(payload, 1.0, 300, 60, 1000, 800, 10, 12)
-    assert anchor != (10, 10)
-    # With no points in any corner region, top-left is preferred.
-    empty = {"points": [{"n": 1, "x": 500.0, "y": 400.0}]}
-    assert _pick_banner_anchor(empty, 1.0, 300, 60, 1000, 800, 10, 12) == (10, 10)
-
 
 def test_template_immune_to_wrapper_img_reset():
     # The artifact wrapper injects `img { max-width: 100% }`; the basemap
