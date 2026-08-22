@@ -66,6 +66,46 @@ Updates re-run only the affected stages (e.g. adding one point re-routes
 two legs; tiles are re-fetched only if the bounding box changed) and
 republish to the same artifact URL.
 
+## Input contract & validation
+
+**Input guidance.** When invoked with incomplete input, Claude does not
+guess — it shows a compact template: region; ordered list of places (any
+language); default transport mode; optional per-leg overrides (mode,
+note). Minimum viable input: a region plus two or more places. The README
+documents the same contract with examples (EN and zh-CN).
+
+**Model-side normalization (Claude's job).** Nominatim accepts
+multilingual queries, but resolution is far more reliable in the place's
+local language or English. Before geocoding, Claude:
+
+1. validates completeness — region present, ≥2 points, every mode within
+   {foot, bike, car, transit};
+2. turns each user-supplied place name into a canonical geocoding
+   `query` — typos corrected, any language translated to the local
+   language or English, city/region context appended. The user's original
+   wording is preserved as the display `name`.
+
+**Deterministic checks (scripts' job).** `geocode.py` passes a
+region-derived `viewbox` with `bounded=1` so search prefers in-region
+hits, and returns top-N candidates with coordinates and address.
+
+**Coherence validation — after geocoding, before routing:**
+
+- *Outlier check:* compute the median center of resolved points; a point
+  farther out than a mode-aware threshold (30 km for a walking itinerary)
+  is a hard error — re-geocode bounded, and if it still lands outside,
+  stop and report the candidates to the user. Never render a map with a
+  known-suspect point.
+- *Leg plausibility:* per-mode warning thresholds (foot > 15 km,
+  bike > 60 km per leg) trigger an explicit user confirmation.
+- *Region consistency:* each resolved address must match the declared
+  region; mismatches are challenged, not silently accepted.
+
+Division of labor: **scripts compute, Claude judges.** Numeric checks
+live in scripts so they run identically every time; semantic arbitration
+— which candidate is right, whether an outlier is a typo or a genuine
+day trip — stays with the model and the user.
+
 ## Repository layout
 
 ```
@@ -137,9 +177,10 @@ Installation: clone, then copy or symlink `skill/` to
 
 ## Workflows
 
-**Create.** User supplies region, ordered points, per-leg modes → full
-pipeline → reply with the artifact link plus the list of resolved place
-names for eyeballing.
+**Create.** User supplies region, ordered points, per-leg modes →
+normalization and coherence validation (see *Input contract &
+validation*) → full pipeline → reply with the artifact link plus the
+list of resolved place names, flagging any warnings inline.
 
 **Update — add point.** Insert into `points`, split the affected leg,
 re-route the two new legs, re-render, republish same URL.
