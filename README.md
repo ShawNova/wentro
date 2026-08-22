@@ -97,6 +97,18 @@ regress the next time the map is rebuilt.
 Claude removes the point, merges its two neighboring legs into one, re-routes, and
 republishes.
 
+## Uninstall
+
+```bash
+rm -rf ~/.claude/skills/wentro ~/.wentro/venv
+```
+
+Removes the skill and its bootstrapped Python environment. Your trip data in
+`~/.wentro/itineraries/` is kept; delete `~/.wentro` entirely only if you want
+that gone too. You can also just tell Claude "uninstall wentro" — the skill's
+own workflow performs the same cleanup. (Developers: the first path is a
+symlink; the repo checkout and its `.venv` are yours to manage.)
+
 ## Data
 
 Every itinerary is one JSON file — the source of truth. Claude never regenerates a map

@@ -125,6 +125,18 @@ and there are exactly `len(points) - 1` legs (enforced by
 - The chain invariant is enforced on every save — if it trips, fix the
   legs list, don't bypass validation.
 
+## Uninstall
+
+When the user asks to uninstall/remove wentro, confirm once, then:
+
+1. `rm -rf ~/.claude/skills/wentro` — no trailing slash: in the dev setup
+   this is a symlink and must be removed as a link, never through it.
+2. `rm -rf ~/.wentro/venv` — the bootstrapped Python environment always
+   goes with the skill.
+3. `~/.wentro/itineraries/` is the user's trip data — KEEP it unless they
+   explicitly ask for it to be deleted too; only then remove `~/.wentro`
+   entirely. Published artifacts are unaffected either way.
+
 ## Etiquette
 
 Nominatim ≤1 req/s (built into geocode.py). Tiles ≤80/build, sequential

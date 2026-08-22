@@ -84,6 +84,17 @@ Claude 会根据你的描述推出一个 `via` 修正点，只重新计算这一
 
 Claude 会删掉这个点，把它两边的路段合并成一段，重新路由，然后重新发布。
 
+## 卸载
+
+```bash
+rm -rf ~/.claude/skills/wentro ~/.wentro/venv
+```
+
+移除 skill 及其自动创建的 Python 环境。`~/.wentro/itineraries/` 里的行程数据
+会保留，确实不要了再整个删除 `~/.wentro`。也可以直接对 Claude 说「卸载
+wentro」，skill 自带的工作流会执行同样的清理。（开发者：第一个路径是软链，
+仓库和它的 `.venv` 由你自己管理。）
+
 ## 数据
 
 每一段行程就是一个 JSON 文件——它是唯一的数据来源（source of truth）。只要这个文件已经存在，
