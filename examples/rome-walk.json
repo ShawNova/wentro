@@ -1,0 +1,19 @@
+{
+  "title": "Classic Rome Walk",
+  "region": "Rome, Italy",
+  "points": [
+    {"id": "p1", "name": "斗兽场", "query": "Colosseum, Rome", "resolved": "Colosseo, Roma", "lat": 41.8902, "lon": 12.4922, "photos": []},
+    {"id": "p2", "name": "古罗马广场", "query": "Roman Forum, Rome", "resolved": "Foro Romano, Roma", "lat": 41.8925, "lon": 12.4853, "photos": []},
+    {"id": "p3", "name": "特雷维喷泉", "query": "Trevi Fountain, Rome", "resolved": "Fontana di Trevi, Roma", "lat": 41.9009, "lon": 12.4833, "photos": []},
+    {"id": "p4", "name": "万神殿", "query": "Pantheon, Rome", "resolved": "Pantheon, Roma", "lat": 41.8986, "lon": 12.4769, "photos": []},
+    {"id": "p5", "name": "纳沃纳广场", "query": "Piazza Navona, Rome", "resolved": "Piazza Navona, Roma", "lat": 41.8992, "lon": 12.4731, "photos": []}
+  ],
+  "legs": [
+    {"from": "p1", "to": "p2", "mode": "foot", "via": [], "geometry": null, "distance_m": null, "duration_s": null},
+    {"from": "p2", "to": "p3", "mode": "foot", "via": [], "geometry": null, "distance_m": null, "duration_s": null},
+    {"from": "p3", "to": "p4", "mode": "foot", "via": [], "geometry": null, "distance_m": null, "duration_s": null},
+    {"from": "p4", "to": "p5", "mode": "foot", "via": [], "geometry": null, "distance_m": null, "duration_s": null}
+  ],
+  "artifact_url": null,
+  "updated": "2026-08-22"
+}
