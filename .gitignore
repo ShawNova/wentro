@@ -1,0 +1,4 @@
+itineraries/*
+!itineraries/.gitkeep
+.DS_Store
+__pycache__/
