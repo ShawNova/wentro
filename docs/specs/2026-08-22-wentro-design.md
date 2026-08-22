@@ -126,7 +126,7 @@ wentro/
 │       ├── geocode.py            # Nominatim search w/ region bias
 │       ├── route.py              # OSRM routing w/ via-points
 │       ├── tiles.py              # OSM tile fetch + stitch → data URI
-│       └── render.py             # JSON + template → final HTML
+│       └── render.py             # JSON + template → HTML + PNG export
 ├── templates/map.html            # render template
 ├── requirements.txt              # requests, Pillow
 ├── examples/rome-walk.json       # committed sample itinerary
@@ -202,6 +202,16 @@ re-route, republish.
 
 ## Rendering
 
+**Outputs.** Every build produces two artifacts from the same tiles and
+geometry:
+
+1. **Interactive artifact** — the initial view is auto-fitted to contain
+   the entire route with padding; no panning needed to see the full trip.
+2. **Static PNG share image** — the stitched basemap with the route,
+   numbered markers, title, and OSM attribution composited in Pillow;
+   ~2000 px on the long side, auto-zoomed to fully contain the route.
+   Saved next to the itinerary JSON and sent to the user in chat.
+
 - Stitched OSM basemap as the background layer inside a pan container;
   CSS zoom up to ~2.5×.
 - SVG overlay: route polylines colored per mode (foot / bike / drive),
@@ -244,4 +254,3 @@ re-route, republish.
 ## Roadmap
 
 - Photo insertion per point (field already reserved).
-- Static image export of the map for chat-app sharing.
