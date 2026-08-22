@@ -84,12 +84,15 @@ and there are exactly `len(points) - 1` legs (enforced by
    `python3 skill/scripts/render.py --itinerary itineraries/<slug>.json --print-bbox`
    → `minlon,minlat,maxlon,maxlat`. Feed that straight into tiles.py, which
    pads it further:
-   `python3 skill/scripts/tiles.py --bbox "<bbox from above>" --out /tmp/wentro-map.png --meta-out /tmp/wentro-meta.json`
+   `python3 skill/scripts/tiles.py --bbox "<bbox from above>" --out /tmp/wentro-<slug>-map.png --meta-out /tmp/wentro-<slug>-meta.json`
 6. Render:
-   `python3 skill/scripts/render.py --itinerary itineraries/<slug>.json --basemap /tmp/wentro-map.png --meta /tmp/wentro-meta.json --out-html /tmp/wentro-page.html --out-png itineraries/<slug>.png`
+   `python3 skill/scripts/render.py --itinerary itineraries/<slug>.json --basemap /tmp/wentro-<slug>-map.png --meta /tmp/wentro-<slug>-meta.json --out-html /tmp/wentro-<slug>.html --out-png itineraries/<slug>.png`
    (`--template` defaults to the `templates/map.html` shipped alongside this
    skill; pass it explicitly only to override.)
-7. Publish `/tmp/wentro-page.html` as an artifact. If the itinerary has an
+7. Publish `/tmp/wentro-<slug>.html` as an artifact. Slug-scoped paths
+   keep concurrent builds and test runs from clobbering each other —
+   never reuse a shared scratch file without checking it is the build
+   you produced (a stale basemap renders a blank gray map). If the itinerary has an
    `artifact_url`, pass it as `url` so the SAME link updates. Store the
    returned URL in the JSON. Send the PNG to the user as a file.
 8. Reply with: artifact link, the resolved-name list for eyeballing, and
