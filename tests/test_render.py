@@ -94,16 +94,73 @@ def test_render_png_downscales_oversized_basemap(tmp_path):
 
 def test_render_html_escapes_injection_attacks(tmp_path):
     data, meta, basemap = fixture(tmp_path)
-    # Craft a payload with injection attempts
+    # Craft a payload with injection attempts across several fields.
     p = render.build_payload(data, meta, basemap)
     p["title"] = "x</title><script>alert('xss')</script><title>y"
     p["legs"][0]["note"] = "broken</script><img src=x onerror=alert('xss')>"
+    p["points"][0]["name"] = "<!--<script>"
     out = tmp_path / "page.html"
     render.render_html(p, "templates/map.html", out)
     html = out.read_text()
-    # Ensure no raw </script> in the HTML (should be escaped to <\/script>)
-    assert "</script>" not in html or "<\\/script>" in html
-    # Ensure the title doesn't break the <title> tag
-    assert "</title>" not in html.split("<title>")[1].split("</title>")[0]
-    # JSON should contain escaped slashes
-    assert "<\\/script" in html  # escaped JSON in the script
+    data_line = next(line for line in html.splitlines() if "const DATA" in line)
+    # The entire injected payload lands on this one line (compact JSON);
+    # a positive check that it contains no raw '<' at all, rather than the
+    # narrower "no </script>" check, since any raw '<' can break out of the
+    # surrounding <script> context (e.g. via a new tag).
+    assert "<" not in data_line
+
+
+def test_font_returns_a_font_object():
+    f = render._font(20)
+    assert f is not None
+
+
+def test_render_png_succeeds_with_chinese_title(tmp_path):
+    data, meta, basemap = fixture(tmp_path)
+    data["title"] = "罗马漫步"
+    p = render.build_payload(data, meta, basemap)
+    out = tmp_path / "share.png"
+    render.render_png(p, basemap, out)  # must not crash
+    assert out.exists()
+
+
+def test_compute_bbox_covers_point_and_leg_geometry():
+    # Reference vector from the polyline spec: decodes to points well
+    # outside the two endpoints below.
+    encoded = "_p~iF~ps|U_ulLnnqC_mqNvxq`@"
+    data = {
+        "points": [
+            {"id": "p1", "lat": 38.0, "lon": -120.0},
+            {"id": "p2", "lat": 38.1, "lon": -120.1},
+        ],
+        "legs": [
+            {"from": "p1", "to": "p2", "mode": "car", "geometry": encoded},
+        ],
+    }
+    minlon, minlat, maxlon, maxlat = render.compute_bbox(data)
+    # The decoded geometry ranges over lat 38.5..43.252, lon -126.453..-120.2,
+    # which should widen the bbox well beyond the two points' own coords.
+    assert minlat <= 38.0 and maxlat >= 43.252
+    assert minlon <= -126.453 and maxlon >= -120.0
+
+
+def test_transit_leg_note_renders_in_svg_and_png(tmp_path):
+    data, meta, basemap = fixture(tmp_path)
+    data["legs"][0]["mode"] = "transit"
+    data["legs"][0]["note"] = "Metro line B, ~8 min"
+    p = render.build_payload(data, meta, basemap)
+
+    out_html = tmp_path / "page.html"
+    render.render_html(p, "templates/map.html", out_html)
+    html = out_html.read_text()
+    # The overlay SVG is built client-side by the embedded script (not
+    # present as static markup in the saved file), so we check for the
+    # note-halo code path this fix adds (paint-order is unique to it,
+    # unlike the pre-existing marker-number <text> creation) plus the
+    # note string itself, which the note-rendering branch feeds to it.
+    assert "paint-order" in html
+    assert "Metro line B, ~8 min" in html
+
+    out_png = tmp_path / "share.png"
+    render.render_png(p, basemap, out_png)  # must not crash
+    assert out_png.exists()

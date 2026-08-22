@@ -55,7 +55,7 @@ Scripts resolve where itinerary files live with this rule, in order:
 | Field | Type | Meaning |
 |---|---|---|
 | `title` | string | Human-readable name for the itinerary, shown on the map and its side panel. |
-| `region` | string | The declared region (city or country), e.g. `"Rome, Italy"`. Used to bias geocoding (Nominatim `viewbox`) and to check that every resolved point actually falls within it. |
+| `region` | string | The declared region (city or country), e.g. `"Rome, Italy"`. Used to bias geocoding (Nominatim `viewbox`). Region consistency is not a schema-enforced guarantee — it's checked during the workflow: the bounded search itself, `validate.py`'s outlier/coherence checks, and a review of each candidate's `display_name` against the declared region before it's accepted (see `skill/SKILL.md`). |
 | `points` | array | Ordered list of stops, first to last. See *Point fields* below. |
 | `legs` | array | Ordered list of connections between consecutive points. See *Leg fields* below. |
 | `artifact_url` | string \| null | The published Claude Artifact URL, or `null` before first publish. Passed back in on republish so updates land on the same URL instead of minting a new one. |
@@ -100,10 +100,14 @@ routing API — and are rendered as a schematic dashed line labeled with
 
 `via` holds user-supplied correction coordinates for a leg whose routed path
 didn't match what actually happened (OSRM took a different street, missed a
-detour, etc.). When present, `route.py` routes through these points in order
-between `from` and `to`. Corrections are persisted in the file specifically
-so that regenerating the map later — after adding a point elsewhere, say —
-never regresses a previously-fixed leg back to the wrong route.
+detour, etc.). When present, the orchestrator (the Claude-driven workflow in
+`skill/SKILL.md`, not `route.py` itself) inserts these coordinates between
+the leg's `from` and `to` endpoints when it builds the `--coords` argument
+for `route.py` — `route.py` only ever sees a flat list of coordinates; it
+does not read the itinerary file or know about the `via` field. Corrections
+are persisted in the file specifically so that regenerating the map later —
+after adding a point elsewhere, say — never regresses a previously-fixed leg
+back to the wrong route.
 
 ## Chain invariant
 

@@ -2,8 +2,6 @@
 
 [English](README.md)
 
-*重温你走过的路。把一场已经结束的旅行，变成一张可以分享的行程地图。*
-
 Wentro — retrace the journey you went. 温途——重温你走过的路。
 
 ## 这是什么
@@ -33,10 +31,10 @@ Wentro — retrace the journey you went. 温途——重温你走过的路。
 ```bash
 git clone https://github.com/ShawNova/wentro.git
 cd wentro && pip install -r requirements.txt
-ln -s "$(pwd)/skill" ~/.claude/skills/wentro
+mkdir -p ~/.claude/skills && ln -sfn "$(pwd)/skill" ~/.claude/skills/wentro
 ```
 
-需要 Python ≥ 3.10。第三方依赖只有 `requests` 和 `Pillow`，版本锁定在 `requirements.txt` 里。
+需要 Python ≥ 3.10。第三方依赖只有 `requests` 和 `Pillow`，在 `requirements.txt` 里声明最低版本。
 
 ## 使用方法
 
@@ -94,7 +92,8 @@ Claude 就绝不会凭聊天记忆重新生成地图，而是加载并编辑这�
 - **Nominatim** —— 地理编码，限速每秒最多 1 次请求，携带描述性的 User-Agent。
 - **FOSSGIS OSRM**（`routing.openstreetmap.de`）—— 步行/骑行/驾车路由，低频调用，携带描述性
   的 User-Agent。
-- **OpenStreetMap 瓦片服务器** —— 底图瓦片，最多 2 个并发下载，每次构建最多下载 80 张瓦片。
+- **OpenStreetMap 瓦片服务器** —— 底图瓦片，逐张下载、每次请求之间有短暂停顿，每次构建最多
+  下载 80 张瓦片，并携带描述性的 User-Agent。
 
 每一张生成的地图和 PNG 图片上都会带上必需的 **© OpenStreetMap contributors** 署名。
 

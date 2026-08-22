@@ -2,8 +2,6 @@
 
 [中文说明](README.zh-CN.md)
 
-*Retrace the journey you went. Turn a finished trip into a shareable itinerary map.*
-
 Wentro — retrace the journey you went. 温途——重温你走过的路。
 
 ## What it is
@@ -39,11 +37,11 @@ published artifact never talks to the network; it doesn't need to.
 ```bash
 git clone https://github.com/ShawNova/wentro.git
 cd wentro && pip install -r requirements.txt
-ln -s "$(pwd)/skill" ~/.claude/skills/wentro
+mkdir -p ~/.claude/skills && ln -sfn "$(pwd)/skill" ~/.claude/skills/wentro
 ```
 
 Requires Python ≥ 3.10. The only third-party dependencies are `requests` and `Pillow`,
-pinned in `requirements.txt`.
+declared in `requirements.txt`.
 
 ## Usage
 
@@ -110,8 +108,9 @@ service's usage policy:
   User-Agent.
 - **FOSSGIS OSRM** (`routing.openstreetmap.de`) — walking/cycling/driving routes, low
   volume, descriptive User-Agent.
-- **OpenStreetMap tile servers** — basemap tiles, at most 2 concurrent downloads and
-  at most 80 tiles per map build.
+- **OpenStreetMap tile servers** — basemap tiles, downloaded one at a time with a
+  short pause between requests, at most 80 tiles per map build, with a descriptive
+  User-Agent.
 
 Every rendered map and PNG carries the required **© OpenStreetMap contributors**
 attribution.

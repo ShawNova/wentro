@@ -1,6 +1,4 @@
 """Full pipeline against the committed example, all network mocked."""
-import json
-
 from PIL import Image
 
 import render
@@ -28,6 +26,14 @@ def test_example_validates_and_renders(tmp_path, monkeypatch):
     for p in payload["points"]:
         assert 0 <= p["x"] <= meta["width"]
         assert 0 <= p["y"] <= meta["height"]
+    # Every leg path vertex (not just the endpoints) must also land inside
+    # the image — the bbox has to cover route geometry, not just points.
+    # With this example's straight-line legs (no OSRM geometry) this is a
+    # trivial pass; the assertion is the guard against a future regression.
+    for leg in payload["legs"]:
+        for x, y in leg["path"]:
+            assert 0 <= x <= meta["width"]
+            assert 0 <= y <= meta["height"]
 
     out_html = tmp_path / "page.html"
     out_png = tmp_path / "share.png"

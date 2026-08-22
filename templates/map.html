@@ -89,6 +89,21 @@ for (const leg of DATA.legs) {
   pl.setAttribute("opacity", "0.85");
   if (leg.dashed) pl.setAttribute("stroke-dasharray", "10 8");
   svg.appendChild(pl);
+  if (leg.note) {
+    const [mx, my] = leg.path[Math.floor(leg.path.length / 2)];
+    const lt = document.createElementNS(NS, "text");
+    lt.setAttribute("x", mx); lt.setAttribute("y", my);
+    lt.setAttribute("font-size", "12");
+    lt.setAttribute("fill", leg.color);
+    lt.setAttribute("stroke", "white");
+    lt.setAttribute("stroke-width", "3");
+    lt.setAttribute("paint-order", "stroke");
+    lt.setAttribute("stroke-linejoin", "round");
+    lt.setAttribute("text-anchor", "middle");
+    lt.setAttribute("dominant-baseline", "central");
+    lt.textContent = leg.note;
+    svg.appendChild(lt);
+  }
 }
 for (const p of DATA.points) {
   const g = document.createElementNS(NS, "g");

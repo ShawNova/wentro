@@ -23,6 +23,29 @@ If input is incomplete, do NOT guess — show this template:
 > - Places in visit order: …
 > - How you moved between them (walking by default): …
 
+## Itinerary schema (summary)
+
+Full field-by-field reference: `docs/data-format.md` in the wentro repo. When
+this skill is running from the installed `~/.claude/skills/wentro` symlink
+(no `docs/` alongside it), use this inline summary of the JSON shape instead:
+
+```json
+{
+  "title": "...", "region": "...",
+  "points": [{"id": "p1", "name": "...", "query": "...", "resolved": "...",
+              "lat": 0.0, "lon": 0.0, "photos": []}],
+  "legs": [{"from": "p1", "to": "p2", "mode": "foot", "via": [],
+            "geometry": "<polyline5|null>", "distance_m": 0, "duration_s": 0}],
+  "artifact_url": null, "updated": "YYYY-MM-DD"
+}
+```
+
+`transit` legs omit `via`/`geometry`/`distance_m`/`duration_s` and instead
+carry a human `note` (e.g. `"Metro line B, ~8 min"`). `legs` must form a
+single chain: `legs[i].from == points[i].id`, `legs[i].to == points[i+1].id`,
+and there are exactly `len(points) - 1` legs (enforced by
+`common.validate_chain` on every load/save).
+
 ## Parse & normalize (your job, not the scripts')
 
 1. Validate: region present; ≥2 points; modes within foot/bike/car/transit.
@@ -40,6 +63,9 @@ If input is incomplete, do NOT guess — show this template:
    → `{bounded, candidates:[{display_name, lat, lon, ...}]}`.
    Pick the best candidate; if ambiguous or `bounded: false`, show the top
    candidates and ask. Store lat/lon/resolved on the point.
+   - Verify each chosen candidate's `display_name` is consistent with the
+     declared region; if it isn't, challenge it — ask the user to confirm —
+     instead of accepting it silently.
 2. Write the JSON; `common.save_itinerary` validates the chain invariant.
 3. Coherence gate:
    `python3 skill/scripts/validate.py --itinerary itineraries/<slug>.json`
@@ -48,13 +74,21 @@ If input is incomplete, do NOT guess — show this template:
    proceeding. Never render a map with a known-suspect point.
 4. Route each non-transit leg (lat,lon order; vias between endpoints):
    `python3 skill/scripts/route.py --mode foot --coords "41.8902,12.4922;41.8925,12.4853"`
-   → store geometry/distance_m/duration_s on the leg. On RuntimeError:
-   keep geometry null (renders as dashed approximate) and tell the user.
+   → store geometry/distance_m/duration_s on the leg. On any routing failure
+   (OSRM RuntimeError or a network/HTTP error): keep geometry null (renders
+   as dashed approximate) and tell the user.
    Transit legs: no routing; write a human `note` ("Metro line B, ~8 min").
-5. Basemap (bbox = min/max of all point coords; script pads it):
-   `python3 skill/scripts/tiles.py --bbox "12.4731,41.8902,12.4922,41.9009" --out /tmp/wentro-map.png --meta-out /tmp/wentro-meta.json`
+5. Basemap — compute the bbox AFTER routing, so it covers routed geometry
+   and not just the point coordinates (OSRM's path can bow outside the
+   straight line between two points):
+   `python3 skill/scripts/render.py --itinerary itineraries/<slug>.json --print-bbox`
+   → `minlon,minlat,maxlon,maxlat`. Feed that straight into tiles.py, which
+   pads it further:
+   `python3 skill/scripts/tiles.py --bbox "<bbox from above>" --out /tmp/wentro-map.png --meta-out /tmp/wentro-meta.json`
 6. Render:
-   `python3 skill/scripts/render.py --itinerary itineraries/<slug>.json --basemap /tmp/wentro-map.png --meta /tmp/wentro-meta.json --template templates/map.html --out-html /tmp/wentro-page.html --out-png itineraries/<slug>.png`
+   `python3 skill/scripts/render.py --itinerary itineraries/<slug>.json --basemap /tmp/wentro-map.png --meta /tmp/wentro-meta.json --out-html /tmp/wentro-page.html --out-png itineraries/<slug>.png`
+   (`--template` defaults to the `templates/map.html` shipped alongside this
+   skill; pass it explicitly only to override.)
 7. Publish `/tmp/wentro-page.html` as an artifact. If the itinerary has an
    `artifact_url`, pass it as `url` so the SAME link updates. Store the
    returned URL in the JSON. Send the PNG to the user as a file.

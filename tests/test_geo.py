@@ -1,5 +1,3 @@
-import pytest
-
 from common import (decode_polyline, haversine_km, lonlat_to_global_px,
                     median_center)
 
