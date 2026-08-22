@@ -60,11 +60,17 @@ and there are exactly `len(points) - 1` legs (enforced by
 
 `<skill_dir>` below is this skill's directory (where this SKILL.md lives).
 
-0. Environment (first run) — resolve the interpreter, call it `$PY` below:
-   - `./.venv/bin/python` if it exists (repo development setup);
-   - else `~/.wentro/venv/bin/python` if it exists;
+0. Environment (first run) — resolve the interpreter, call it `$PY` below.
+   Anchor on the skill directory, NEVER on the working directory (a `./.venv`
+   belonging to some unrelated project must not be picked up):
+   - `<skill_dir>/../.venv/bin/python` if it exists — the repo's own venv in
+     the clone+symlink development setup (the symlink resolves into the repo);
+   - else `~/.wentro/venv/bin/python` if it exists — the skill's home, next
+     to `~/.wentro/itineraries/`; safe to delete, it is recreated on demand;
    - else bootstrap it: pick the newest `python3.x` (≥ 3.10) on PATH, then
      `<python> -m venv ~/.wentro/venv && ~/.wentro/venv/bin/pip install -r <skill_dir>/requirements.txt`.
+   Then verify with `$PY -c "import requests, PIL"`; if that fails, run
+   `$PY -m pip install -r <skill_dir>/requirements.txt` once and re-verify.
    Never assume the bare `python3` is adequate (macOS ships 3.9 with a TLS
    stack too old for the routing service).
 
