@@ -153,6 +153,31 @@ def _font(size, font_path=None):
     return ImageFont.load_default(size=size)
 
 
+def _pick_banner_anchor(payload, s, bw, bh, width, height, pad, marker_r):
+    """Choose a corner for the title banner that hides the fewest markers.
+
+    Corners are tried in reading order (top-left preferred, bottom-right
+    last so the banner tends to stay clear of the attribution box).
+    """
+    corners = [
+        (pad, pad),
+        (width - bw - pad, pad),
+        (pad, height - bh - pad),
+        (width - bw - pad, height - bh - pad),
+    ]
+
+    def hidden_markers(corner):
+        cx, cy = corner
+        return sum(
+            1
+            for p in payload["points"]
+            if cx - marker_r <= p["x"] * s <= cx + bw + marker_r
+            and cy - marker_r <= p["y"] * s <= cy + bh + marker_r
+        )
+
+    return min(corners, key=hidden_markers)
+
+
 def render_png(payload, basemap_path, out_path, long_side=2000, font_path=None):
     img = Image.open(basemap_path).convert("RGB")
     s = min(2.0, long_side / max(img.size))
@@ -189,10 +214,13 @@ def render_png(payload, basemap_path, out_path, long_side=2000, font_path=None):
     small_font = _font(max(11, img.width // 120), font_path)
     pad = img.width // 90
     tb = draw.textbbox((0, 0), payload["title"], font=title_font)
-    draw.rounded_rectangle(
-        [pad, pad, pad * 3 + (tb[2] - tb[0]), pad * 2 + (tb[3] - tb[1]) + pad // 2],
-        radius=pad // 2, fill="white", outline="#d2d2d2")
-    draw.text((pad * 2, pad + pad // 2), payload["title"], font=title_font,
+    bw = pad * 3 + (tb[2] - tb[0])
+    bh = pad * 2 + (tb[3] - tb[1]) + pad // 2
+    bx, by = _pick_banner_anchor(payload, s, bw, bh, img.width, img.height,
+                                 pad, r)
+    draw.rounded_rectangle([bx, by, bx + bw, by + bh],
+                           radius=pad // 2, fill="white", outline="#d2d2d2")
+    draw.text((bx + pad, by + pad // 2), payload["title"], font=title_font,
               fill="#22303c")
     attr = "© OpenStreetMap contributors"
     ab = draw.textbbox((0, 0), attr, font=small_font)
