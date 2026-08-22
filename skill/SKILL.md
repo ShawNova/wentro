@@ -83,8 +83,8 @@ and there are exactly `len(points) - 1` legs (enforced by
    straight line between two points):
    `python3 skill/scripts/render.py --itinerary itineraries/<slug>.json --print-bbox`
    → `minlon,minlat,maxlon,maxlat`. Feed that straight into tiles.py, which
-   pads it further:
-   `python3 skill/scripts/tiles.py --bbox "<bbox from above>" --out /tmp/wentro-<slug>-map.png --meta-out /tmp/wentro-<slug>-meta.json`
+   pads it further (use the `--bbox=` form: a bbox west of Greenwich starts with `-` and the space form trips argparse):
+   `python3 skill/scripts/tiles.py --bbox="<bbox from above>" --out /tmp/wentro-<slug>-map.png --meta-out /tmp/wentro-<slug>-meta.json`
 6. Render:
    `python3 skill/scripts/render.py --itinerary itineraries/<slug>.json --basemap /tmp/wentro-<slug>-map.png --meta /tmp/wentro-<slug>-meta.json --out-html /tmp/wentro-<slug>.html --out-png itineraries/<slug>.png`
    (`--template` defaults to the `templates/map.html` shipped alongside this
